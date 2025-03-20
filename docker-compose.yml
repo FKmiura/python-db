@@ -1,0 +1,44 @@
+services:
+  db:
+    image: mysql
+    environment:
+      - MYSQL_USER=dev
+      - MYSQL_ROOT_PASSWORD=root
+      - MYSQL_PASSWORD=admin
+      - MYSQL_DATABASE=produtodb
+    ports:
+      - '1234:3306'
+    restart: always
+    volumes:
+      - 'dbdata:/lib/mysql'
+    networks:
+      - network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 5s
+      retries: 3
+  backend:
+    build:
+      context: ./backend
+    ports:
+      - "5000:5000"
+    environment:
+      - FLASK_APP=app.py
+      - FLASK_RUN_HOST=0.0.0.0
+    depends_on:
+      - db
+    networks:
+      - network
+  frontend:
+    build:
+      context: ./frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    networks:
+      - network
+volumes:
+  dbdata:
+networks:
+  network:
